@@ -41,7 +41,12 @@ void ArduinoComms::setMotorValues(int val_1, int val_2)
     ss << "m " << val_1 << " " << val_2 << "\r";
     sendMsg(ss.str(), false);
 }
-
+void ArduinoComms::setServoPosition(int val_11, int val_22)
+{
+    std::stringstream ss;
+    ss << "s " << val_11 << " " << val_22 << "\r";
+    sendMsg(ss.str(), false);
+}
 void ArduinoComms::setPidValues(float k_p, float k_d, float k_i, float k_o)
 {
     std::stringstream ss;

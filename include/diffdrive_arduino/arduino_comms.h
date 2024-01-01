@@ -22,7 +22,7 @@ public:
   void readEncoderValues(int &val_1, int &val_2);
   void setMotorValues(int val_1, int val_2);
   void setPidValues(float k_p, float k_d, float k_i, float k_o);
-
+  void setServoPosition(int val_11, int val_22);
   bool connected() const { return serial_conn_.isOpen(); }
 
   std::string sendMsg(const std::string &msg_to_send, bool print_output = false);

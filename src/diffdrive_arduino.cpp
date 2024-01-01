@@ -39,7 +39,15 @@ return_type DiffDriveArduino::configure(const hardware_interface::HardwareInfo &
   // Set up the Arduino
   arduino_.setup(cfg_.device, cfg_.baud_rate, cfg_.timeout);  
 
+
+  position_commands_.reserve(info_.joints.size());
+  position_states_.reserve(info_.joints.size());
+  prev_position_commands_.reserve(info_.joints.size());
+
   RCLCPP_INFO(logger_, "Finished Configuration");
+
+
+
 
   status_ = hardware_interface::status::CONFIGURED;
   return return_type::OK;
@@ -48,6 +56,7 @@ return_type DiffDriveArduino::configure(const hardware_interface::HardwareInfo &
 std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_interfaces()
 {
   // We need to set up a position and a velocity interface for each wheel
+  RCLCPP_INFO(logger_, "START STATE");
 
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
@@ -55,6 +64,12 @@ std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_i
   state_interfaces.emplace_back(hardware_interface::StateInterface(l_wheel_.name, hardware_interface::HW_IF_POSITION, &l_wheel_.pos));
   state_interfaces.emplace_back(hardware_interface::StateInterface(r_wheel_.name, hardware_interface::HW_IF_VELOCITY, &r_wheel_.vel));
   state_interfaces.emplace_back(hardware_interface::StateInterface(r_wheel_.name, hardware_interface::HW_IF_POSITION, &r_wheel_.pos));
+  // state_interfaces.emplace_back(hardware_interface::StateInterface("arm_base_forearm_joint", hardware_interface::HW_IF_POSITION, &position_states_[0]));
+  for (size_t i = 2; i < info_.joints.size(); i++)
+  {
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+  }
 
   return state_interfaces;
 }
@@ -67,7 +82,12 @@ std::vector<hardware_interface::CommandInterface> DiffDriveArduino::export_comma
 
   command_interfaces.emplace_back(hardware_interface::CommandInterface(l_wheel_.name, hardware_interface::HW_IF_VELOCITY, &l_wheel_.cmd));
   command_interfaces.emplace_back(hardware_interface::CommandInterface(r_wheel_.name, hardware_interface::HW_IF_VELOCITY, &r_wheel_.cmd));
-
+  // command_interfaces.emplace_back(hardware_interface::CommandInterface("arm_base_forearm_joint", hardware_interface::HW_IF_POSITION, &position_commands_[0]));
+  for (size_t i = 2; i < info_.joints.size(); i++)
+  {
+    command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+  }
   return command_interfaces;
 }
 
@@ -79,7 +99,17 @@ return_type DiffDriveArduino::start()
   arduino_.sendEmptyMsg();
   // arduino.setPidValues(9,7,0,100);
   // arduino.setPidValues(14,7,0,100);
+  position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
+  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
+  position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
+
   arduino_.setPidValues(30, 20, 0, 100);
+  arduino_.setServoPosition(0,90);
+  arduino_.setServoPosition(1,20);
+  arduino_.setServoPosition(2,20);
+  arduino_.setServoPosition(3,20);
+  arduino_.setServoPosition(4,50);
+  arduino_.setServoPosition(5,90);
 
   status_ = hardware_interface::status::STARTED;
 

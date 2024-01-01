@@ -19,6 +19,7 @@ class Wheel
     double rads_per_count = 0;
 
     Wheel() = default;
+    
 
     Wheel(const std::string &wheel_name, int counts_per_rev);
     

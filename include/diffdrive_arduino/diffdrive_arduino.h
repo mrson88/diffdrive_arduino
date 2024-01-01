@@ -14,7 +14,7 @@
 #include "config.h"
 #include "wheel.h"
 #include "arduino_comms.h"
-
+#include <vector>
 
 using hardware_interface::return_type;
 
@@ -52,7 +52,9 @@ private:
   rclcpp::Logger logger_;
 
   std::chrono::time_point<std::chrono::system_clock> time_;
-  
+  std::vector<double> position_commands_;
+  std::vector<double> prev_position_commands_;
+  std::vector<double> position_states_;
 };
 
 
