@@ -4,6 +4,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
 
+#include <pluginlib/class_list_macros.hpp>
 
 
 DiffDriveArduino::DiffDriveArduino()
@@ -66,9 +67,10 @@ std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_i
   state_interfaces.emplace_back(hardware_interface::StateInterface(r_wheel_.name, hardware_interface::HW_IF_POSITION, &r_wheel_.pos));
   // state_interfaces.emplace_back(hardware_interface::StateInterface("arm_base_forearm_joint", hardware_interface::HW_IF_POSITION, &position_states_[0]));
   for (size_t i = 2; i < info_.joints.size(); i++)
-  {
+  {RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
     state_interfaces.emplace_back(hardware_interface::StateInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+        
   }
 
   return state_interfaces;
@@ -87,6 +89,8 @@ std::vector<hardware_interface::CommandInterface> DiffDriveArduino::export_comma
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "joint_size: " << info_.joints.size());
   }
   return command_interfaces;
 }
@@ -99,16 +103,16 @@ return_type DiffDriveArduino::start()
   arduino_.sendEmptyMsg();
   // arduino.setPidValues(9,7,0,100);
   // arduino.setPidValues(14,7,0,100);
-  position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
-  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
-  position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0};
+  position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
+  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
+  position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
 
   arduino_.setPidValues(30, 20, 0, 100);
   arduino_.setServoPosition(0,90);
   arduino_.setServoPosition(1,20);
   arduino_.setServoPosition(2,20);
   arduino_.setServoPosition(3,20);
-  arduino_.setServoPosition(4,50);
+  arduino_.setServoPosition(4,90);
   arduino_.setServoPosition(5,90);
 
   status_ = hardware_interface::status::STARTED;
@@ -151,7 +155,7 @@ hardware_interface::return_type DiffDriveArduino::read()
   r_wheel_.pos = r_wheel_.calcEncAngle();
   r_wheel_.vel = (r_wheel_.pos - pos_prev) / deltaSeconds;
 
-
+  position_states_ = position_commands_;
 
   return return_type::OK;
 
@@ -160,14 +164,41 @@ hardware_interface::return_type DiffDriveArduino::read()
 
 hardware_interface::return_type DiffDriveArduino::write()
 {
-
+std::string msg;
   if (!arduino_.connected())
   {
     return return_type::ERROR;
   }
+  if (position_commands_ == prev_position_commands_)
+  {
+    arduino_.setMotorValues(l_wheel_.cmd / l_wheel_.rads_per_count / cfg_.loop_rate, r_wheel_.cmd / r_wheel_.rads_per_count / cfg_.loop_rate);
 
-  arduino_.setMotorValues(l_wheel_.cmd / l_wheel_.rads_per_count / cfg_.loop_rate, r_wheel_.cmd / r_wheel_.rads_per_count / cfg_.loop_rate);
+    // Nothing changed, do not send any command
+    return return_type::OK;
+  }
+  
 
+  try
+  {
+    
+    
+    for (size_t i = 6; i < position_commands_.size(); i++){
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "i=: " << i);
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "Sending new command " << position_commands_[i]);
+      double pos  = static_cast<double>(((position_commands_.at(i) + (M_PI / 2)) * 180) / M_PI);
+      arduino_.setServoPosition(i-2,pos);
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "Sending new command " << pos);
+    }
+    
+  }
+  catch (...)
+  {
+
+    return hardware_interface::return_type::ERROR;
+  }
+
+  prev_position_commands_ = position_commands_;
 
 
 

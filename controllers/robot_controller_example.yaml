@@ -7,9 +7,11 @@ controller_manager:
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-    arm_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+    # arm_controller:
+    #   type: joint_trajectory_controller/JointTrajectoryController
 
+    arm_controller:
+      type: joint_trajectory_controller/ForwardCommandController
     # gripper_controller:
     #   type: forward_command_controller/ForwardCommandController
 
@@ -23,13 +25,12 @@ controller_manager:
 arm_controller:
   ros__parameters:
     joints:
-      - arm_base_forearm_joint
+
       - forearm_hand_1_joint
       - forearm_hand_2_joint
       - forearm_hand_3_joint
       - forearm_claw_joint
       - joint_4
-      - joint_5
       
 
     command_interfaces:
@@ -44,7 +45,6 @@ arm_controller:
 gripper_controller:
   ros__parameters:
     joints:
-      - joint_4
       - joint_5
     # interface_name: position
       

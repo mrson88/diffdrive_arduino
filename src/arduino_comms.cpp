@@ -45,8 +45,16 @@ void ArduinoComms::setServoPosition(int val_11, int val_22)
 {
     std::stringstream ss;
     ss << "s " << val_11 << " " << val_22 << "\r";
-    sendMsg(ss.str(), false);
+    sendMsg(ss.str(), true);
 }
+
+void ArduinoComms::getServoPosition(int pos_11)
+{
+    std::stringstream ss;
+    ss << "t " << pos_11  << "\r";
+    sendMsg(ss.str(), true);
+}
+
 void ArduinoComms::setPidValues(float k_p, float k_d, float k_i, float k_o)
 {
     std::stringstream ss;
