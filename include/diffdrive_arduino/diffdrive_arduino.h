@@ -15,6 +15,7 @@
 #include "wheel.h"
 #include "arduino_comms.h"
 #include <vector>
+#include <string>
 
 using hardware_interface::return_type;
 
@@ -48,7 +49,7 @@ private:
 
   Wheel l_wheel_;
   Wheel r_wheel_;
-
+  std::vector<std::string> joint_name_;
   rclcpp::Logger logger_;
 
   std::chrono::time_point<std::chrono::system_clock> time_;

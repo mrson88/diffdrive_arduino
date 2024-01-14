@@ -44,7 +44,10 @@ return_type DiffDriveArduino::configure(const hardware_interface::HardwareInfo &
   position_commands_.reserve(info_.joints.size());
   position_states_.reserve(info_.joints.size());
   prev_position_commands_.reserve(info_.joints.size());
-
+  joint_name_={"arm_base_forearm_joint","forearm_hand_1_joint","forearm_hand_2_joint","forearm_hand_3_joint","forearm_claw_joint","joint_4"};
+  position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
+  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
+  position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
   RCLCPP_INFO(logger_, "Finished Configuration");
 
 
@@ -58,7 +61,7 @@ std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_i
 {
   // We need to set up a position and a velocity interface for each wheel
   RCLCPP_INFO(logger_, "START STATE");
-
+  
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   state_interfaces.emplace_back(hardware_interface::StateInterface(l_wheel_.name, hardware_interface::HW_IF_VELOCITY, &l_wheel_.vel));
@@ -66,13 +69,18 @@ std::vector<hardware_interface::StateInterface> DiffDriveArduino::export_state_i
   state_interfaces.emplace_back(hardware_interface::StateInterface(r_wheel_.name, hardware_interface::HW_IF_VELOCITY, &r_wheel_.vel));
   state_interfaces.emplace_back(hardware_interface::StateInterface(r_wheel_.name, hardware_interface::HW_IF_POSITION, &r_wheel_.pos));
   // state_interfaces.emplace_back(hardware_interface::StateInterface("arm_base_forearm_joint", hardware_interface::HW_IF_POSITION, &position_states_[0]));
-  for (size_t i = 2; i < info_.joints.size(); i++)
-  {RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+  // for (size_t i = 2; i < info_.joints.size(); i++)
+  // {RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+  //   state_interfaces.emplace_back(hardware_interface::StateInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+        
+  // }
+  for (size_t i = 0; i < joint_name_.size(); i++)
+  {RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << joint_name_[i]);
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_states_[i]));
+        joint_name_[i], hardware_interface::HW_IF_POSITION, &position_states_[i]));
         
   }
-
   return state_interfaces;
 }
 
@@ -85,12 +93,22 @@ std::vector<hardware_interface::CommandInterface> DiffDriveArduino::export_comma
   command_interfaces.emplace_back(hardware_interface::CommandInterface(l_wheel_.name, hardware_interface::HW_IF_VELOCITY, &l_wheel_.cmd));
   command_interfaces.emplace_back(hardware_interface::CommandInterface(r_wheel_.name, hardware_interface::HW_IF_VELOCITY, &r_wheel_.cmd));
   // command_interfaces.emplace_back(hardware_interface::CommandInterface("arm_base_forearm_joint", hardware_interface::HW_IF_POSITION, &position_commands_[0]));
-  for (size_t i = 2; i < info_.joints.size(); i++)
+  // for (size_t i = 2; i < info_.joints.size(); i++)
+  // {
+  //   command_interfaces.emplace_back(hardware_interface::CommandInterface(
+  //       info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+  //   RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+  //   RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "joint_size: " << info_.joints.size());
+  // }
+
+
+
+  for (size_t i = 0; i < joint_name_.size(); i++)
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &position_commands_[i]));
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
-    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "joint_size: " << info_.joints.size());
+        joint_name_[i], hardware_interface::HW_IF_POSITION, &position_commands_[i]));
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << joint_name_[i]);
+    RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "joint_size: " << joint_name_.size());
   }
   return command_interfaces;
 }
@@ -103,9 +121,9 @@ return_type DiffDriveArduino::start()
   arduino_.sendEmptyMsg();
   // arduino.setPidValues(9,7,0,100);
   // arduino.setPidValues(14,7,0,100);
-  position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
-  prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
-  position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, 0.0, 0.0, };
+  // position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
+  // prev_position_commands_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
+  // position_states_ = { 0.0, 0.0, 0.0, 0.0 ,0.0, 0.0, };
 
   arduino_.setPidValues(30, 20, 0, 100);
   arduino_.setServoPosition(0,90);
@@ -181,13 +199,13 @@ std::string msg;
   try
   {
     
-    
-    for (size_t i = 6; i < position_commands_.size(); i++){
-      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << info_.joints[i].name);
+    // arduino_.setMotorValues(l_wheel_.cmd / l_wheel_.rads_per_count / cfg_.loop_rate, r_wheel_.cmd / r_wheel_.rads_per_count / cfg_.loop_rate);
+    for (size_t i = 0; i < position_commands_.size(); i++){
+      RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "get joint: " << joint_name_[i]);
       RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "i=: " << i);
       RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "Sending new command " << position_commands_[i]);
       double pos  = static_cast<double>(((position_commands_.at(i) + (M_PI / 2)) * 180) / M_PI);
-      arduino_.setServoPosition(i-2,pos);
+      arduino_.setServoPosition(i,pos);
       RCLCPP_INFO_STREAM(rclcpp::get_logger("ArduinobotInterface"), "Sending new command " << pos);
     }
     
