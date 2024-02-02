@@ -76,5 +76,14 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "python.analysis.extraPaths": [
+        "/home/mrson/yolobot/install/yolov8_msgs/lib/python3.8/site-packages",
+        "/home/mrson/ros2_ws/install/yolov8_msgs/lib/python3.8/site-packages",
+        "/home/mrson/ros2_ws/build/joy_tester",
+        "/home/mrson/ros2_ws/install/joy_tester/lib/python3.8/site-packages",
+        "/home/mrson/ros2_ws/build/ball_tracker",
+        "/home/mrson/ros2_ws/install/ball_tracker/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ]
 }
